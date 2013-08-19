@@ -12,14 +12,14 @@ try:
 except ImportError:
 	raise ImportError("It seems like you don't have the 'requests' module installed which is required for TweetPony to work. Please install it first.")
 import time
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 from threading import Thread
 
-from endpoints import *
-from error import *
-from models import *
-from utils import quote
+from .endpoints import *
+from .error import *
+from .models import *
+from .utils import quote
 
 class ArgList(tuple):
 	def __getitem__(self, index):
@@ -30,7 +30,7 @@ class ArgList(tuple):
 
 class KWArgDict(dict):
 	def __getitem__(self, key):
-		if key not in self.keys():
+		if key not in list(self.keys()):
 			return None
 		else:
 			return dict.__getitem__(self, key)
@@ -75,7 +75,7 @@ class API(object):
 		self.request_token_secret = request_token_secret
 	
 	def parse_qs(self, qs):
-		return dict([(key, values[0]) for key, values in urlparse.parse_qs(qs).iteritems()])
+		return dict([(key, values[0]) for key, values in urllib.parse.parse_qs(qs).items()])
 	
 	def oauth_generate_nonce(self):
 		return base64.b64encode(hashlib.sha1(str(random.getrandbits(256))).digest(), random.choice(['rA','aZ','gQ','hH','hG','aR','DD'])).rstrip('==')
@@ -97,16 +97,16 @@ class API(object):
 		return auth_data
 	
 	def generate_oauth_header(self, auth_data):
-		return {'Authorization': "OAuth %s" % ", ".join(['%s="%s"' % item for item in auth_data.items()])}
+		return {'Authorization': "OAuth %s" % ", ".join(['%s="%s"' % item for item in list(auth_data.items())])}
 	
 	def get_oauth_header(self, method, url, callback_url = None, get = None, post = None):
 		if not self._multipart:
-			get_data = (get or {}).items()
-			post_data = (post or {}).items()
+			get_data = list((get or {}).items())
+			post_data = list((post or {}).items())
 		else:
 			get_data = []
 			post_data = []
-		auth_data = self.get_oauth_header_data(callback_url = callback_url).items()
+		auth_data = list(self.get_oauth_header_data(callback_url = callback_url).items())
 		data = [(quote(key, safe = "~"), quote(value, safe = "~")) for key, value in get_data + post_data + auth_data]
 		data = sorted(sorted(data), key = lambda item: item[0].upper())
 		param_string = []
@@ -135,7 +135,7 @@ class API(object):
 		scheme = "https" if self.secure else "http"
 		url = "%s://%s%s%s" % (scheme, host, root, endpoint)
 		if get_data:
-			qs = urllib.urlencode(get_data)
+			qs = urllib.parse.urlencode(get_data)
 			url += "?%s" % qs
 		return url
 	
@@ -145,7 +145,7 @@ class API(object):
 		self._multipart = files is not None
 		header = self.get_oauth_header(method, url, callback_url, get, post)
 		if get:
-			full_url = url + "?" + urllib.urlencode(get)
+			full_url = url + "?" + urllib.parse.urlencode(get)
 		else:
 			full_url = url
 		"""# DEBUG
@@ -223,14 +223,14 @@ class API(object):
 			value = "true" if value else "false"
 		elif type(value) == list:
 			value = ",".join([str(val) for val in value])
-		elif type(value) not in [str, unicode] and value is not None:
-			value = unicode(value)
+		elif type(value) not in [str, str] and value is not None:
+			value = str(value)
 		return (key, value)
 	
 	def parse_params(self, params):
 		files = {}
-		_params = dict(params.items())
-		for key, value in params.iteritems():
+		_params = dict(list(params.items()))
+		for key, value in params.items():
 			if value in [None, []]:
 				del _params[key]
 			if key in ['image', 'media', 'banner']:
@@ -239,14 +239,14 @@ class API(object):
 						value.seek(0)
 					except ValueError:
 						pass
-				elif type(value) in [str, unicode]:
+				elif type(value) in [str, str]:
 					value = open(value, 'r')
 				del _params[key]
 				if key == 'media':
 					key = 'media[]'
 				files[key] = value
 		params = _params
-		parsed_params = dict([self.parse_param(key, value) for key, value in params.iteritems()])
+		parsed_params = dict([self.parse_param(key, value) for key, value in params.items()])
 		return (parsed_params, files)
 	
 	def parse_stream_entity(self, entity):
@@ -254,7 +254,7 @@ class API(object):
 			data = json.loads(entity)
 		except ValueError:
 			return None
-		keys = data.keys()
+		keys = list(data.keys())
 		if 'delete' in keys:
 			instance = DeletionEvent.from_json(data['delete'])
 		elif 'scrub_geo' in keys:
@@ -285,7 +285,7 @@ class API(object):
 		if stream:
 			endpoints = STREAM_ENDPOINTS
 			processor = kwargs.get('processor', StreamProcessor(self))
-			if 'processor' in kwargs.keys():
+			if 'processor' in list(kwargs.keys()):
 				del kwargs['processor']
 		else:
 			endpoints = ENDPOINTS
@@ -316,10 +316,10 @@ class API(object):
 			raise ParameterError("Missing required parameters: %s" % ", ".join(missing_params))
 		
 		unsupported_params = []
-		for param in kwargs.keys():
+		for param in list(kwargs.keys()):
 			if param not in data['url_params'] + data['required_params'] + data['optional_params']:
 				unsupported_params.append(param)
-		for param in files.keys():
+		for param in list(files.keys()):
 			if param not in data['url_params'] + data['required_params'] + data['optional_params']:
 				unsupported_params.append(param)
 		if unsupported_params:
@@ -458,4 +458,4 @@ class BufferedStreamProcessor(StreamProcessor):
 			time.sleep(1)
 
 if __name__ == '__main__':
-	print "Rainbow Dash ist best pony! :3"
+	print("Rainbow Dash ist best pony! :3")

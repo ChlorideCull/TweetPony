@@ -13,21 +13,21 @@ def main():
 	api = get_api()
 	if not api:
 		return
-	username = raw_input("Username to lookup (leave blank for your own): ").strip()
+	username = input("Username to lookup (leave blank for your own): ").strip()
 	if username == "":
 		username = api.user.screen_name
 	try:
 		user = api.get_user(screen_name = username)
 	except tweetpony.APIError as err:
-		print "Oh no! The user's profile could not be loaded. Twitter returned error #%i and said: %s" % (err.code, err.description)
+		print("Oh no! The user's profile could not be loaded. Twitter returned error #%i and said: %s" % (err.code, err.description))
 	else:
-		for key, value in user.iteritems():
+		for key, value in user.items():
 			if key in ['entities', 'json', 'status']:
 				continue
 			line = "%s " % key.replace("_", " ").capitalize()
 			line += "." * (50 - len(line)) + " "
-			line += unicode(value)
-			print line
+			line += str(value)
+			print(line)
 
 if __name__ == "__main__":
 	main()

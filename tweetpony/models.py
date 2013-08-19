@@ -3,9 +3,9 @@
 
 import json
 import locale
-import utils
+from . import utils
 from datetime import datetime
-from error import ParameterError
+from .error import ParameterError
 
 def strptime(string, fmt = '%a %b %d %H:%M:%S +0000 %Y'):
 	locale.setlocale(locale.LC_TIME, 'C')
@@ -24,7 +24,7 @@ class DummyUser:
 class AttrDict(dict):
 	def __init__(self, data = None):
 		if data is not None:
-			for key, value in data.iteritems():
+			for key, value in data.items():
 				if type(value) == dict:
 					value = AttrDict(value)
 				elif type(value) == list:
@@ -82,8 +82,8 @@ class ModelCollection(list):
 		self._iterator = list.__iter__(self)
 		return self._iterator
 	
-	def next(self):
-		return self._iterator.next()
+	def __next__(self):
+		return next(self._iterator)
 
 class MixedModelCollection(Model):
 	model_key = 'models'
@@ -94,7 +94,7 @@ class MixedModelCollection(Model):
 		if type(data) is list and len(data) == 1:
 			data = data[0]
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == self.model_key:
 				value = self.collection.from_json(value)
 			self[key] = value
@@ -109,7 +109,7 @@ class MixedModelCollection(Model):
 		return len(self.get(self.model_key, []))
 
 	def __getitem__(self, descriptor):
-		if type(descriptor) in [str, unicode]:
+		if type(descriptor) in [str, str]:
 			return Model.__getitem__(self, descriptor)
 		else:
 			return self.get(self.model_key, []).__getitem__(descriptor)
@@ -117,8 +117,8 @@ class MixedModelCollection(Model):
 	def __iter__(self):
 		return self.get(self.model_key, []).__iter__()
 	
-	def next(self):
-		return self.get(self.model_key, []).next()
+	def __next__(self):
+		return next(self.get(self.model_key, []))
 
 class CursoredModelCollection(MixedModelCollection):
 	pass
@@ -130,7 +130,7 @@ class Status(Model):
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
 		tmp = cls()
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'created_at':
 				value = strptime(value)
 			elif key == 'user':
@@ -139,10 +139,10 @@ class Status(Model):
 				value = Status.from_json(value)
 			elif key == 'source':
 				try:
-					tmp[u'source_url'] = value.split('"')[1]
+					tmp['source_url'] = value.split('"')[1]
 					value = value.split(">")[1].split("<")[0]
 				except IndexError:
-					tmp[u'source_url'] = None
+					tmp['source_url'] = None
 			tmp[key] = value
 		self = tmp
 		return self
@@ -176,7 +176,7 @@ class User(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'created_at':
 				value = strptime(value)
 			elif key == 'status':
@@ -246,7 +246,7 @@ class Message(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'created_at':
 				value = strptime(value)
 			elif key == 'sender' or key == 'recipient':
@@ -276,7 +276,7 @@ class SimpleRelationship(Model):
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
 		tmp = cls()
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'connections':
 				tmp['followed_by'] = 'followed_by' in value
 				tmp['following'] = 'following' in value
@@ -295,7 +295,7 @@ class List(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'created_at':
 				value = strptime(value)
 			elif key == 'user':
@@ -325,7 +325,7 @@ class SavedSearch(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'created_at':
 				value = strptime(value)
 			self[key] = value
@@ -341,20 +341,20 @@ class Place(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'contained_within':
 				value = [Place.from_json(item) for item in value]
 			self[key] = value
 		return self
 	
 	def similar(self, lat, long, **kwargs):
-		return self.api.similar_places(lat = lat, long = long, name = self.name, **kwargs)
+		return self.api.similar_places(lat = lat, int = int, name = self.name, **kwargs)
 
 class PlaceSearchResult(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'result':
 				value['places'] = PlaceCollection.from_json(value['places'])
 			self[key] = value
@@ -379,7 +379,7 @@ class Event(Model):
 	@classmethod
 	def from_json(cls, data):
 		self = cls(Model.from_json(data))
-		for key, value in self.iteritems():
+		for key, value in self.items():
 			if key == 'target' or key == 'source':
 				value = User.from_json(value)
 			self[key] = value

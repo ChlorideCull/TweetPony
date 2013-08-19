@@ -11,7 +11,7 @@ import tweetpony
 
 class StreamProcessor(tweetpony.StreamProcessor):
 	def on_status(self, status):
-		print "%s: %s" % (status.user.screen_name, status.text)
+		print("%s: %s" % (status.user.screen_name, status.text))
 		return True
 
 def main():

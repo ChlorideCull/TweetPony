@@ -2,7 +2,7 @@
 # See the LICENSE file for the full license.
 
 import re
-from urllib import quote as _quote
+from urllib.parse import quote as _quote
 
 def optimize_mentions(usernames, text):
 	username = re.compile(r'(?:^|[^\w]+)(?P<name>@\w+)')
@@ -15,7 +15,7 @@ def quote(text, *args, **kwargs):
 	t = type(text)
 	if t is str:
 		converted_text = text
-	elif t is unicode:
+	elif t is str:
 		converted_text = str(text.encode('utf-8'))
 	else:
 		try:

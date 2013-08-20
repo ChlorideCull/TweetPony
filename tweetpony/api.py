@@ -79,7 +79,7 @@ class API(object):
 		return dict([(key, values[0]) for key, values in urllib.parse.parse_qs(qs).items()])
 	
 	def oauth_generate_nonce(self):
-		str(base64.b64encode(hashlib.sha256(str(os.urandom(512)).encode('utf-8')).digest()), encoding='utf-8').replace('+', '').replace('/', '').replace('=', '')
+		return str(base64.b64encode(hashlib.sha1(str(os.urandom(512)).encode('utf-8')).digest()), encoding='utf-8').replace('+', '').replace('/', '').replace('=', '')
 	
 	def get_oauth_header_data(self, callback_url = None):
 		auth_data = {
@@ -108,8 +108,10 @@ class API(object):
 			get_data = []
 			post_data = []
 		auth_data = list(self.get_oauth_header_data(callback_url = callback_url).items())
+		#print(auth_data)
 		data = [(quote(key, safe = "~"), quote(value, safe = "~")) for key, value in get_data + post_data + auth_data]
 		data = sorted(sorted(data), key = lambda item: item[0].upper())
+		#print(data)
 		param_string = []
 		for key, value in data:
 			param_string.append("%s=%s" % (key, value))
@@ -149,7 +151,7 @@ class API(object):
 			full_url = url + "?" + urllib.parse.urlencode(get)
 		else:
 			full_url = url
-		# DEBUG
+		"""# DEBUG
 		info = "=" * 50 + "\n"
 		info += "Method:    %s\n" % method
 		info += "URL:       %s\n" % full_url
@@ -161,14 +163,14 @@ class API(object):
 		info += "JSON:      %s\n" % str(is_json)
 		info += "=" * 50
 		print(info)
-		# END DEBUG
+		# END DEBUG"""
 		if method.upper() == "POST":
 			response = requests.post(full_url, data = post, files = files, headers = header, stream = stream, timeout = self.timeout)
 		else:
 			response = requests.get(full_url, data = post, files = files, headers = header, stream = stream, timeout = self.timeout)
-		# DEBUG
+		"""# DEBUG
 		print(("\nResponse:  %s\n" % response.text) + "=" * 50)
-		# END DEBUG
+		# END DEBUG"""
 		if response.status_code != 200:
 			try:
 				data = response.json()

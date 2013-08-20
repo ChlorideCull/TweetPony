@@ -10,15 +10,14 @@ import os
 import tweetpony
 
 def authenticate():
-	#try:
-	if 1 == 1:
+	try:
 		api = tweetpony.API(tweetpony.CONSUMER_KEY, tweetpony.CONSUMER_SECRET)
 		url = api.get_auth_url()
 		print("Visit this URL to obtain your verification code: %s" % url)
 		verifier = input("Input your code: ")
 		api.authenticate(verifier)
-	#except tweetpony.APIError as err:
-	#	print("Oh no! You could not be authenticated. Twitter returned error #%i and said: %s" % (err.code, err.description))
+	except tweetpony.APIError as err:
+		print("Oh no! You could not be authenticated. Twitter returned error #%i and said: %s" % (err.code, err.description))
 	else:
 		auth_data = {'access_token': api.access_token, 'access_token_secret': api.access_token_secret}
 		with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".auth_data.json"), 'w') as f:

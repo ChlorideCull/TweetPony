@@ -3,6 +3,6 @@
 
 from .api import *
 
-# Consumer key / secret of the "TweetPony" application. Can be used for example purposes.
-CONSUMER_KEY = "acZe1khMjIvsg1g8izdag"
-CONSUMER_SECRET = "B9E3gmuQSZPaEhwGEBD7879oNHydbdWnjRKyB7b1ag"
+# Consumer key / secret of the "TweetPony3_Example" application. Can be used for example purposes.
+CONSUMER_KEY = "TBRoIh8iesxhKH9564kbQ"
+CONSUMER_SECRET = "h2N264oAdwPqcKlB9vvnLkgUmk9Lq3wtsHPeY2mrNtM"

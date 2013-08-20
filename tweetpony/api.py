@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import json
 import random
+import os
 try:
 	import requests
 except ImportError:
@@ -78,7 +79,7 @@ class API(object):
 		return dict([(key, values[0]) for key, values in urllib.parse.parse_qs(qs).items()])
 	
 	def oauth_generate_nonce(self):
-		return base64.b64encode(hashlib.sha1(str(random.getrandbits(256))).digest(), random.choice(['rA','aZ','gQ','hH','hG','aR','DD'])).rstrip('==')
+		str(base64.b64encode(hashlib.sha256(str(os.urandom(512)).encode('utf-8')).digest()), encoding='utf-8').replace('+', '').replace('/', '').replace('=', '')
 	
 	def get_oauth_header_data(self, callback_url = None):
 		auth_data = {
@@ -125,8 +126,8 @@ class API(object):
 		else:
 			token_secret = ""
 		signing_key = "&".join([quote(self.consumer_secret, safe = "~"), token_secret])
-		signature = hmac.new(signing_key, signature_base, hashlib.sha1)
-		signature = quote(binascii.b2a_base64(signature.digest())[:-1], safe = "~")
+		signature = hmac.new(signing_key.encode('utf-8'), signature_base.encode('utf-8'), hashlib.sha1)
+		signature = quote(str(binascii.b2a_base64(signature.digest())[:-1], encoding='utf-8'), safe = "~")
 		auth_data.append(('oauth_signature', signature))
 		return self.generate_oauth_header(dict(auth_data))
 	
@@ -148,7 +149,7 @@ class API(object):
 			full_url = url + "?" + urllib.parse.urlencode(get)
 		else:
 			full_url = url
-		"""# DEBUG
+		# DEBUG
 		info = "=" * 50 + "\n"
 		info += "Method:    %s\n" % method
 		info += "URL:       %s\n" % full_url
@@ -159,15 +160,15 @@ class API(object):
 		info += "Streaming: %s\n" % str(stream)
 		info += "JSON:      %s\n" % str(is_json)
 		info += "=" * 50
-		print info
-		# END DEBUG"""
+		print(info)
+		# END DEBUG
 		if method.upper() == "POST":
 			response = requests.post(full_url, data = post, files = files, headers = header, stream = stream, timeout = self.timeout)
 		else:
 			response = requests.get(full_url, data = post, files = files, headers = header, stream = stream, timeout = self.timeout)
-		"""# DEBUG
-		print ("\nResponse:  %s\n" % response.text) + "=" * 50
-		# END DEBUG"""
+		# DEBUG
+		print(("\nResponse:  %s\n" % response.text) + "=" * 50)
+		# END DEBUG
 		if response.status_code != 200:
 			try:
 				data = response.json()

@@ -14,12 +14,10 @@ def optimize_mentions(usernames, text):
 def quote(text, *args, **kwargs):
 	t = type(text)
 	if t is str:
-		converted_text = text
-	elif t is str:
-		converted_text = str(text.encode('utf-8'))
+		converted_text = text.encode('utf-8')
 	else:
 		try:
-			converted_text = str(text)
+			converted_text = str(text).encode('utf-8')
 		except:
-			converted_text = text
+			raise TypeError("Could not convert " + t + " to str with utf-8 encoding")
 	return _quote(converted_text, *args, **kwargs)
